@@ -1,0 +1,7 @@
+click>=8.1
+colorama>=0.4
+coloredlogs>=15.0
+toml>=0.10
+
+yaslha>=0.3.4
+# git+https://github.com/misho104/simsusy@fffffff#egg=simsusy

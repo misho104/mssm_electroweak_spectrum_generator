@@ -1,0 +1,12 @@
+[spectrum]
+calculator = "mssm.tanbeta_resum_calculator"
+
+[external]
+simsusy    = "simsusy"
+gm2calc    = "~/GM2Calc/bin/gm2calc.x"
+
+[micromegas]
+make             = "make"
+micromegas_dir   = "~/micromegas/MSSM"
+source_file      = "./micromegas.c"
+executable_name  = "mssm_ew_spec_gen"
