@@ -11,3 +11,7 @@ make             = "make"
 micromegas_dir   = "~/micromegas/MSSM"
 source_file      = "./micromegas.c"
 executable_name  = "mssm_ew_spec_gen"
+
+[sinderin]
+# converter = "../vendor/FR_model_MSSM/contrib/convert_slha_to_sindarin.py"
+# ufo_model = "../vendor/FR_model_MSSM/MSSM_nofv_nocpv_UFO/"

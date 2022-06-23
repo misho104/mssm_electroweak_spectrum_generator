@@ -46,6 +46,8 @@ def run(config: Config, input: pathlib.Path) -> None:
     yaslha.dump_file(
         slha2, slha2_path, comments_preserve=yaslha.dumper.CommentsPreserve.ALL
     )
+    # convert to sinderin
+    config.convert_to_sinderin(slha2_path)
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})

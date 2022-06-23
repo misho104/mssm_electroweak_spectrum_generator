@@ -1,0 +1,3 @@
+[submodule "vendor/FR_model_MSSM"]
+	path = vendor/FR_model_MSSM
+	url = git@github.com:misho104/FR_model_MSSM

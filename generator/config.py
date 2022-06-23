@@ -10,8 +10,8 @@ from typing import Any, List, Optional, Tuple, Union
 import click
 import colorama
 import toml
-import yaslha.slha
 import yaslha.block
+import yaslha.slha
 
 from data import GM2CalcOutput, MicromegasOutput
 
@@ -27,7 +27,8 @@ SDECAY_OUT = "sdecay_slha.out"
 
 class Config:
     @staticmethod
-    def run_process(command: List[str], **kwargs: Any) -> Tuple[int, str]:
+    def run_process(command, to_print=True, **kwargs):
+        # type: (List[str], bool, Any) -> Tuple[int, str]
         logger.info(BLUE + " ".join(command) + RESET)
         process = subprocess.Popen(
             command,
@@ -37,13 +38,16 @@ class Config:
             **kwargs,
         )
         assert process and process.stdout
-        click.echo(colorama.Style.DIM)
+        if to_print:
+            click.echo(colorama.Style.DIM)
         lines: List[str] = []
         for line in process.stdout:
-            click.echo(line, nl=False)
+            if to_print:
+                click.echo(line, nl=False)
             lines.append(line)
         return_code = process.wait()
-        click.echo(RESET)
+        if to_print:
+            click.echo(RESET)
         if return_code != 0:
             logger.error(f"Run failed with exit code {return_code}.")
             logger.info(process.__dict__)
@@ -83,6 +87,14 @@ class Config:
             ),
         }
         self.micromegas_executable: Optional[Tuple[pathlib.Path, pathlib.Path]] = None
+        sinderin_config = config["sinderin"]
+        self.sinderin: Optional[Tuple[str, str]] = None
+        if all(k in sinderin_config for k in ["converter", "ufo_model"]):
+            self.sinderin = (
+                self.__get_config(sinderin_config, "converter"),
+                self.__get_config(sinderin_config, "ufo_model"),
+            )
+
         self._setup_simsusy()
         self._setup_gm2calc()
         self._setup_micromegas()
@@ -134,10 +146,7 @@ class Config:
             new_source_path,
         )
         shutil.copyfile(source, new_source_path)
-        logger.info(BLUE + " ".join(command) + RESET)
-        click.echo(colorama.Style.DIM)
-        subprocess.run(command)
-        click.echo(RESET)
+        self.run_process(command, False)
 
         # check compile
         if shutil.which(executable_path) is None:
@@ -163,10 +172,7 @@ class Config:
     def run_simsusy(self, *args: PathLike) -> None:
         """Run simsusy."""
         command = [self.simsusy, "run", self.calculator] + [str(a) for a in args]
-        logger.info(BLUE + " ".join(command) + RESET)
-        click.echo(colorama.Style.DIM)
-        subprocess.run(command)
-        click.echo(RESET)
+        self.run_process(command, False)
 
     def run_micromegas(self, slha1: pathlib.Path) -> MicromegasOutput:
         """Run micrOMEGAs."""
@@ -209,3 +215,12 @@ class Config:
         for d in decays:
             d.head.pre_comment = ["#"]
         return dcinfo, decays
+
+    def convert_to_sinderin(self, slha2: pathlib.Path) -> None:
+        if self.sinderin is None:
+            logger.error("Sinderin is not configured.")
+            exit(1)
+        command = ["python", *self.sinderin, str(slha2)]
+        _, output = self.run_process(command, False)
+        with open(slha2.with_suffix(".sinderin"), "w") as f:
+            f.write(output)
