@@ -7,7 +7,6 @@ import pathlib
 import click
 import coloredlogs
 import yaslha
-
 from config import Config
 
 logger = logging.getLogger(__name__)
@@ -25,13 +24,13 @@ def message(message: str) -> None:
     click.echo("#" * 80)
 
 
-def run(config: Config, input: pathlib.Path) -> None:
+def run(config: Config, input_path: pathlib.Path) -> None:
     """Calculate everything."""
     message("Generate spectrum by SimSUSY (SLHA1 and SLHA2)")
-    slha1_path = pathlib.Path(".") / input.with_suffix(".slha1").name
-    slha2_path = pathlib.Path(".") / input.with_suffix(".slha2").name
-    config.run_simsusy(input, slha2_path)
-    config.run_simsusy("--v1", input, slha1_path)
+    slha1_path = pathlib.Path(".") / input_path.with_suffix(".slha1").name
+    slha2_path = pathlib.Path(".") / input_path.with_suffix(".slha2").name
+    config.run_simsusy(input_path, slha2_path)
+    config.run_simsusy("--v1", input_path, slha1_path)
     # micromegas and gm2calc
     micromegas = config.run_micromegas(slha1_path)
     gm2calc = config.run_gm2calc(slha1_path)

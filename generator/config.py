@@ -12,7 +12,6 @@ import colorama
 import toml
 import yaslha.block
 import yaslha.slha
-
 from data import GM2CalcOutput, MicromegasOutput
 
 logger = logging.getLogger(__name__)
@@ -116,19 +115,19 @@ class Config:
         return
 
     def _setup_micromegas(self) -> None:
-        """Setup micromegas environment."""
+        """Set up micromegas environment."""
         self.micromegas_executable = None
 
         # check config
         error = False
         make = self.micromegas["make"]
-        dir = pathlib.Path(self.micromegas["dir"]).expanduser().resolve()
+        directory = pathlib.Path(self.micromegas["dir"]).expanduser().resolve()
         source = pathlib.Path(self.micromegas["source"]).expanduser()
         if shutil.which(make) is None:
             logger.error(f"Make executable '{make}' not found.")
             error = True
-        if not dir.is_dir():
-            logger.error(f"micrOMEGAs path '{self.micromegas['dir']}' not found.")
+        if not directory.is_dir():
+            logger.error(f"micrOMEGAs path '{self.micromegas['directory']}' not found.")
             error = True
         if not source.is_file():
             logger.error(f"Source for micrOMEGAs '{source}' not found.")
@@ -137,9 +136,9 @@ class Config:
             exit(1)
 
         # compile
-        executable_path = (dir / self.micromegas["executable_name"]).resolve()
+        executable_path = (directory / self.micromegas["executable_name"]).resolve()
         new_source_path = executable_path.with_suffix(source.suffix)
-        command = [make, "-C", str(dir), f"main={new_source_path.name}"]
+        command = [make, "-C", str(directory), f"main={new_source_path.name}"]
         logger.info(
             f"Copy {BLUE}%s{RESET} to {BLUE}%s{RESET} and compile.",
             source,
@@ -153,7 +152,7 @@ class Config:
             logger.error(f"Compilation of {executable_path} failed.")
             exit(1)
         logger.info("Compilation of micrOMEGAs code is done successfully.")
-        self.micromegas_executable = (dir, executable_path)
+        self.micromegas_executable = (directory, executable_path)
 
     def _setup_sdecay(self) -> None:
         """Check if SDecay executable is available."""

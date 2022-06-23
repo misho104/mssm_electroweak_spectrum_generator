@@ -26,7 +26,6 @@ class MicromegasOutput:
     @classmethod
     def parse_output(cls, output: str) -> Dict[str, float]:
         """Parse micromegas output."""
-
         omega = check_result("omega_DM", cls.RE_OMEGA.findall(output))
         proton = check_result("proton", cls.RE_PROTON.findall(output))
         neutron = check_result("proton", cls.RE_NEUTRON.findall(output))
