@@ -35,10 +35,14 @@ def run(config: Config, input: pathlib.Path) -> None:
     # micromegas and gm2calc
     micromegas = config.run_micromegas(slha1_path)
     gm2calc = config.run_gm2calc(slha1_path)
+    dcinfo, decays = config.run_sdecay(slha1_path)
     # dump
     slha2 = yaslha.parse_file(slha2_path)
     slha2.add_block(micromegas.to_slha_block())
     slha2.add_block(gm2calc.to_slha_block())
+    slha2.add_block(dcinfo)
+    for d in decays:
+        slha2.add_block(d)
     yaslha.dump_file(
         slha2, slha2_path, comments_preserve=yaslha.dumper.CommentsPreserve.ALL
     )

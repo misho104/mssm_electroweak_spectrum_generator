@@ -3,5 +3,5 @@ colorama>=0.4
 coloredlogs>=15.0
 toml>=0.10
 
-yaslha>=0.3.4
-# git+https://github.com/misho104/simsusy@fffffff#egg=simsusy
+yaslha>=0.3.3
+git+https://github.com/misho104/simsusy@5b08bf147cf666f162e714e39eb81e6f4795b2de#egg=simsusy

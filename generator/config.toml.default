@@ -4,6 +4,7 @@ calculator = "mssm.tanbeta_resum_calculator"
 [external]
 simsusy    = "simsusy"
 gm2calc    = "~/GM2Calc/bin/gm2calc.x"
+sdecay     = "~/sdecay/run"
 
 [micromegas]
 make             = "make"

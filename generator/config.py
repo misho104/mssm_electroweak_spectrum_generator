@@ -1,5 +1,6 @@
 """Configuration module."""
 import logging
+import os
 import pathlib
 import shutil
 import subprocess
@@ -10,6 +11,7 @@ import click
 import colorama
 import toml
 import yaslha.slha
+import yaslha.block
 
 from data import GM2CalcOutput, MicromegasOutput
 
@@ -17,6 +19,10 @@ logger = logging.getLogger(__name__)
 BLUE = colorama.Fore.BLUE
 RESET = colorama.Style.RESET_ALL
 PathLike = Union[str, pathlib.Path]
+
+SDECAY_IN = pathlib.Path(__file__).with_name("sdecay.in")
+SDECAY_SLHA = "SD_leshouches.in"
+SDECAY_OUT = "sdecay_slha.out"
 
 
 class Config:
@@ -67,6 +73,7 @@ class Config:
         self.calculator = self.__get_config(config["spectrum"], "calculator")
         self.simsusy = self.__get_config(config["external"], "simsusy")
         self.gm2calc = self.__get_config(config["external"], "gm2calc")
+        self.sdecay = self.__get_config(config["external"], "sdecay")
         self.micromegas = {
             "make": self.__get_config(config["micromegas"], "make"),
             "dir": self.__get_config(config["micromegas"], "micromegas_dir"),
@@ -79,6 +86,7 @@ class Config:
         self._setup_simsusy()
         self._setup_gm2calc()
         self._setup_micromegas()
+        self._setup_sdecay()
 
     def _setup_simsusy(self) -> None:
         """Check if simsusy is installed and executable."""
@@ -138,6 +146,20 @@ class Config:
         logger.info("Compilation of micrOMEGAs code is done successfully.")
         self.micromegas_executable = (dir, executable_path)
 
+    def _setup_sdecay(self) -> None:
+        """Check if SDecay executable is available."""
+        self.sdecay = str(pathlib.Path(self.sdecay).expanduser().resolve())
+        if shutil.which(self.sdecay) is None:
+            logger.error(f"SDecay executable '{self.sdecay}' not found. See README.")
+            exit(1)
+        if not SDECAY_IN.is_file():
+            logger.error(f"SDecay input file '{SDECAY_IN}' not found.")
+            exit(1)
+        if SDECAY_IN.read_text().find("SDECAY INPUT FILE") == -1:
+            logger.error(f"SDecay input file '{SDECAY_IN}' seems invalid.")
+            exit(1)
+        return
+
     def run_simsusy(self, *args: PathLike) -> None:
         """Run simsusy."""
         command = [self.simsusy, "run", self.calculator] + [str(a) for a in args]
@@ -168,3 +190,22 @@ class Config:
         command = [self.gm2calc, f"--slha-input-file={slha1.with_suffix('.gm2in')}"]
         _, output = self.run_process(command)
         return GM2CalcOutput(output, version)
+
+    def run_sdecay(
+        self, slha1: pathlib.Path
+    ) -> Tuple[yaslha.block.InfoBlock, List[yaslha.block.Decay]]:
+        """Run SDecay."""
+        shutil.copyfile(slha1, SDECAY_SLHA)
+        # add dummy block, otherwise SDecay complains.
+        with open(SDECAY_SLHA, "a") as f:
+            f.write("Block DUMMY #\n     1     0.00000000E+00   #\n")
+        self.run_process([self.sdecay])
+        result = yaslha.parse_file(SDECAY_OUT)
+        os.remove(SDECAY_SLHA)
+        shutil.move(SDECAY_OUT, slha1.with_suffix(".sdecay_raw"))
+        dcinfo = result["DCINFO"]
+        decays = list(result.decays.values())
+        dcinfo.head.pre_comment = ["#"]
+        for d in decays:
+            d.head.pre_comment = ["#"]
+        return dcinfo, decays
